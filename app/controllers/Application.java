@@ -42,13 +42,13 @@ public class Application extends Controller {
         return ok(userJson);
     }
     public Result signup(){
-        Form<SignUpForm> signupForm = formFactory.form(SignUpForm.class).bindFromRequest();
+        Form<SignUpForm> signUpForm = formFactory.form(SignUpForm.class).bindFromRequest();
 
-        if(signupForm.hasErrors()){
-            return ok(signupForm.errorsAsJson());
+        if(signUpForm.hasErrors()){
+            return ok(signUpForm.errorsAsJson());
         }
-        User user = new User(signupForm.data().get("email"),signupForm.data().get("password"));
-        Profile profile = new Profile(signupForm.data().get("firstName"), signupForm.data().get("lastName"));
+        User user = new User(signUpForm.data().get("email"),signUpForm.data().get("password"));
+        Profile profile = new Profile(signUpForm.data().get("firstName"), signUpForm.data().get("lastName"));
         profile.db().save(profile);
         User.db().save(user);
         return ok((JsonNode) objectMapper.valueToTree(user));

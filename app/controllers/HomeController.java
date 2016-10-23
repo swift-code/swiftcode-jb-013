@@ -1,11 +1,10 @@
 package controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import models.ConnectionRequest;
 import models.Profile;
 import models.User;
-import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
 
@@ -42,6 +41,36 @@ public class HomeController extends Controller{
             return connectionJson;
         }).collect(Collectors.toList())));
 
+        data.set("connectionsRequestsRecived",objectMapper.valueToTree(user.connectionRequestsRecived.stream().filter(connectionCheck ->  connectionCheck.status.equals(ConnectionRequest.Status.WAITING)).map(aConnection  -> {
+            ObjectNode connectionRequestJson = objectMapper.createObjectNode();
+            Profile connectionRequestProfile = Profile.find.byId(aConnection.sender.profile.id);
+
+            connectionRequestJson.put("id",aConnection.id);
+            connectionRequestJson.put("firstName",connectionRequestProfile.firstName);
+            connectionRequestJson.put("lastName",connectionRequestProfile.lastName);
+            return connectionRequestJson;
+        }).collect(Collectors.toList())));
+        data.set("Suggestions",objectMapper.valueToTree(User.find.all().stream()
+                .filter(checkSelf -> !user.equals(checkSelf))
+                .filter(checkFreind -> !user.connection.contains(checkFreind))
+                .filter(removeSender -> !user.connectionRequestsRecived.
+                        stream().
+                        map(y -> y.sender).
+                        collect(Collectors.toList()).contains(removeSender))
+                .filter(removeRequested-> !user.connectionRequestsSent
+                        .stream()
+                        .map(y -> y.reciver)
+                        .collect(Collectors.toList())
+                        .contains(removeRequested))
+                .map(suggesstion -> {
+                    ObjectNode suggesstionJson = objectMapper.createObjectNode();
+                    Profile suggestedUserProfile = suggesstion.profile;
+                    suggesstionJson.put("id", suggesstion.id);
+                    suggesstionJson.put("firstName", suggestedUserProfile.firstName);
+                    suggesstionJson.put("lastName", suggestedUserProfile.lastName);
+                    return suggesstionJson;
+                })
+                .collect(Collectors.toList())));
         return ok();
     }
 }
